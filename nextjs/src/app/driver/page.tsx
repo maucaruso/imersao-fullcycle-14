@@ -1,13 +1,24 @@
 'use client';
 
 import type { DirectionsResponseData, FindPlaceFromTextResponseData } from "@googlemaps/google-maps-services-js";
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useMap } from "../hooks/useMap";
+import useSWR from "swr";
+import { fetcher } from "../utils/http";
+import { Route } from "../utils/model";
 
-export function NewRoutePage() {
+export function DriverPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const map = useMap(mapContainerRef);
   const [directionsData, setDirectionsData] = useState<DirectionsResponseData & { request: any }>();
+  
+  const { data: routes, error, isLoading } = useSWR<Route[]>('http://localhost:3000/routes', fetcher, {
+    fallbackData: []
+  });
+  
+  useEffect(() => {
+    console.log(routes)
+  }, [routes])
   
   const searchPlaces = async (event: FormEvent) => {
     event.preventDefault();
@@ -77,33 +88,56 @@ export function NewRoutePage() {
     const route = await response.json();
   }
   
+  const startRoute = async () => {
+    const routeId = (document.getElementById('route') as HTMLSelectElement).value;
+    const response = await fetch(`http://localhost:3000/routes/${routeId}`);
+    const route: Route = await response.json();
+    
+    map?.removeAllRoutes();
+    await map?.addRouteWithIcons({
+      routeId: routeId,
+      startMarkerOptions: {
+        position: route.directions.routes[0].legs[0].start_location
+      },
+      endMarkerOptions: {
+        position: route.directions.routes[0].legs[0].end_location
+      },
+      carMarkerOptions: {
+        position: route.directions.routes[0].legs[0].start_location
+      }
+    });
+    
+    const { steps } = route.directions.routes[0].legs[0];
+    
+    for (const step of steps) {
+      await sleep(2000);
+      map?.moveCar(routeId, step.start_location);
+      await sleep(2000);
+      map?.moveCar(routeId, step.end_location);
+    }
+  }
+  
   return (
     <div style={{display: 'flex', flexDirection: 'row', height: '100%', width: '100%'}}>
       <div>
-        <h1>Nova rota</h1>
-        <form style={{display: 'flex', flexDirection: 'column'}} onSubmit={searchPlaces}>
-          <div>
-            <input id="source" type="text" placeholder="Origem" />
-          </div>
+        <h1>Minha viagem</h1>
+        <div style={{display: 'flex', flexDirection: 'column'}}>
+          <select name="" id="route">
+            {isLoading && <option>Carregando rotas...</option>}
+            {routes!.map((route) => (
+              <option key={route.id} value={route.id}>{route.name}</option>
+            ))}
+          </select>
           
-          <div>
-            <input id="destination" type="text" placeholder="Destino" />
-          </div>
-          
-          <button type="submit">Pesquisar</button>
-        </form>
+          <button type="submit" onClick={startRoute}>Iniciar a viagem</button>
+        </div>
         
-        {directionsData && (
-          <ul>
-            <li>Origem {directionsData.routes[0].legs[0].start_address}</li>
-            <li>Destino {directionsData.routes[0].legs[0].end_address}</li>
-            <button onClick={createRoute}>Criar rota</button>
-          </ul>
-        )}
       </div>
       <div id="map" style={{height: '100%', width: '100%'}} ref={mapContainerRef}></div>
     </div>
   )
 }
 
-export default NewRoutePage;
+export default DriverPage;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
