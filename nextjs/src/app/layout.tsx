@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Inter, Roboto } from 'next/font/google'
 import ThemeRegistry from './components/ThemeRegistry/ThemeRegistry'
+import { Navbar } from './components/Navbar'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -19,6 +20,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ThemeRegistry>
+          <Navbar />
           {children}
         </ThemeRegistry>
       </body>

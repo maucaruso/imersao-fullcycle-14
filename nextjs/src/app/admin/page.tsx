@@ -19,7 +19,7 @@ export function AdminPage() {
       async (data: { route_id: string, lat: number, lng: number }) => {
         console.log('data', data);
         if (!map?.hasRoute(data.route_id)) {
-          const response = await fetch(`http://localhost:3000/routes/${data.route_id}`);
+          const response = await fetch(`http://localhost:3001/api/routes/${data.route_id}`);
           const route: Route = await response.json();
           map?.removeRoute(data.route_id);
           
