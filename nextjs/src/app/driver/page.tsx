@@ -7,6 +7,7 @@ import useSWR from "swr";
 import { fetcher } from "../utils/http";
 import { Route } from "../utils/model";
 import { socket } from "../utils/socket-io";
+import { Button } from "@mui/material";
 
 export function DriverPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -138,6 +139,7 @@ export function DriverPage() {
   
   return (
     <div style={{display: 'flex', flexDirection: 'row', height: '100%', width: '100%'}}>
+      <Button>aaaa</Button>
       <div>
         <h1>Minha viagem</h1>
         <div style={{display: 'flex', flexDirection: 'column'}}>
